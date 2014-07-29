@@ -58,8 +58,8 @@ issue_email = you@youremail.org
 # Registering a new account
 register_email = you@youremail.org
 
-# Avoid automatically generated during testing to go to the main site
-github_repo = "[YOUR-FORK-REPO]/website"
+# link issues to github repo
+# github_repo = "YOUR-FORK-REPO/website"
 
 ########################################################
 #
