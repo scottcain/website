@@ -48,7 +48,7 @@ timer                = 0
 
 ########################################################
 #
-#  EMAILS
+#  EMAILS and Github
 #
 ########################################################
 
@@ -58,6 +58,8 @@ issue_email = you@youremail.org
 # Registering a new account
 register_email = you@youremail.org
 
+# Avoid automatically generated during testing to go to the main site
+github_repo = "[YOUR-FORK-REPO]/website"
 
 ########################################################
 #
@@ -90,4 +92,3 @@ cache_content = false
 #  Override the definition in the wormbase.conf.
 #
 ########################################################
-
