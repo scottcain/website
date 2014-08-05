@@ -62,7 +62,14 @@
         passed_data=genes_biology_data);
   END;
 
-  WRAPPER $field_block title="Genes identified as potential models by orthology" key="genes_orthology";
+  genes_ortho_label = {
+    text => 'Genes identified as potential models:',
+    evidence => {
+        'Inferred automatically' => 'Inferred by orthology to human genes with OMIM annotation'
+    }
+  };
+
+  WRAPPER $field_block title=genes_ortho_label key="genes_orthology";
     genes_orthology_data = fields.genes_orthology.data;
 
     FOREACH gene_obj IN genes_orthology_data;
@@ -82,7 +89,5 @@
         }, key="genes_orthology",
         passed_data=genes_orthology_data);
   END;
-
-  remarks;
 
 %]

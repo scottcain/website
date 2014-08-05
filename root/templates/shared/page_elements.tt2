@@ -265,7 +265,12 @@ END;
       [% IF title; %]
          <div class="field-title">
                   <span title="[% tooltip ? tooltip : fields.$key.description %]">
-                     [% title _ ': ' %]
+                     [% IF ref(title) == 'HASH' && title.evidence;
+                            cell_content(title);  # handle title with more complex structure / format
+                                                  # note: no need to manually ":" at the end of the title
+                        ELSE;
+                            title _ ': ';
+                        END; %]
                    </span>
           </div>
       [%  END; %]

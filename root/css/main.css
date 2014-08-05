@@ -715,6 +715,10 @@ div#create-prompt {
   cursor:pointer;
 }
 
+.evidence .ev {
+    font-weight: normal;
+}
+
 .ev-more-text {
   text-align:center;
   font-size:0.8em;
