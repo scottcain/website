@@ -930,6 +930,11 @@ sub print_sequence {
                 grep {$_->primary_tag eq 'mRNA'} $gff->get_features_by_name("$s.a");
         ($seq_obj) = $seq_obj ? ($seq_obj) : sort {$b->length<=>$a->length}
                 grep {$_->primary_tag eq 'mRNA'} $gff->get_features_by_name("$s.1");
+
+        #####################################
+        use Data::Dumper; print Dumper $seq_obj->{'start'};
+        $seq_obj->{'start'} = '13261546';
+        $seq_obj->{'stop'} = '13272524';
     }
 
     # Haven't fetched a GFF segment? Try Ace.

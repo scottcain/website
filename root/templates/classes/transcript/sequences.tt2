@@ -1,4 +1,12 @@
 [%
+  WRAPPER $field_block title="Upstream and Downstream added";
+    '<form>';
+    'Upstream: <input type="text" id="upstream" value=0><br>';
+    'Downstream: <input type="text" id="downstream" value=0><br>';
+    '<input type="submit" value="generate sequence" id="sequence_submit" rel="/sequence/get_up()/get_down()">;
+    '</form>';
+  END;
+
   sequence('print_sequence');
 
   WRAPPER $field_block title="Strand" key='strand';
@@ -36,3 +44,13 @@
   END;
 
 %]
+
+<script>
+function get_up() {
+    document.getElementById("upstream").value;
+}
+
+function get_down() {
+    document.getElementById("downstream").value;
+}
+</script>

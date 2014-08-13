@@ -1400,6 +1400,16 @@ sub _get_page {
     return $c->model('Schema::Page')->search({url=>$url}, {rows=>1})->next;
 }
 
+#sequence 
+sub sequence :Path('/sequence') :Args(2) :ActionClass('REST') {}
+
+sub sequence_POST{
+  my ( $self, $c, $up_stream, $down_stream ) = @_;
+
+  my $object = transcript;
+  my $data   = $object->print_sequence($up_stream, $down_stream);
+  $c->stash->{$field} = $data;
+} 
 
 ########################################
 #
@@ -1416,5 +1426,6 @@ This library is free software, you can redistribute it and/or modify
 it under the same terms as Perl itself.
 
 =cut
+
 
 1;
