@@ -18,6 +18,11 @@ has 'request_token_url'  => (is => 'ro', isa => 'Str',  required => 1);
 has 'json_data'  => (is => 'rw', isa => 'Str');
 has 'api'        => (is => 'ro', lazy_build => 1);  # Authenticated API
 
+has 'base_url' => (
+    is => 'ro',
+    isa => 'Str',
+    default => 'https://api.mendeley.com');
+
 has 'credentials' => (is => 'ro',
                       lazy_build => 1,
                       'builder' => '_build_credentials');
@@ -68,7 +73,7 @@ sub related_papers {
     my $key = $self->fetch_mendeley_id($id,$type);
 
     # Now get related documents.
-    my $url    = 'https://api-oauth2.mendeley.com/oapi/documents/related';
+    my $url    = 'documents/related';
     my $params = "$key";
 
     # Make request
@@ -86,7 +91,7 @@ sub fetch_mendeley_id {
 
     # Example:
     # http://api.mendeley.com/oapi/documents/details/doi:10.1038\/nmeth.1454?type=doi;consumer-key=XXXX
-    my $url    = "https://api-oauth2.mendeley.com/oapi/documents/details/";
+    my $url    = "documents/details/";
 
     # KLUDGE. Mendeley chokes on single encoded DOIs.
     if ($type eq 'doi') {
