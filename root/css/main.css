@@ -503,7 +503,9 @@ table {
     border-spacing: 0;
 }
 
-
+table ul {
+    padding: 0 0 0 1em;
+}
 
 
 
@@ -2823,6 +2825,10 @@ table.venn tr.venn-data td {
   margin:15px;
 }
 
+#issue-box-content #add-new-issue{
+  margin:15px;
+}
+
 #issue-box textarea, #issue-box input, #issue-box select, #issue-box option{
   background: #222;
   padding: 5px;
@@ -2860,9 +2866,10 @@ table.venn tr.venn-data td {
   margin:0 auto;
 }
 
-#issue-box a:link, #issue-box a:visited{
+#issue-box a, #issue-box a:link, #issue-box a:visited{
   color:white;
   text-decoration: underline;
+  cursor: pointer;
 }
 
 /* = Generic styling added by TH; possibly redundant  ========================== */
@@ -2893,7 +2900,6 @@ div.inline-columns img {
 }
 
 
-
 .button{
   float:left;
   border:1px solid #AAA;
@@ -2917,6 +2923,16 @@ div.inline-columns img {
 
 .button.slink .ui-icon{
   margin:0;
+}
+
+.slink-box:before{
+  content: ' ';
+  clear:both;
+  display:block;
+}
+
+.slink-box {
+  position:relative;
 }
 
 div.title {
