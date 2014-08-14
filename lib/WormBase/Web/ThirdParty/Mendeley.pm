@@ -18,10 +18,11 @@ has 'request_token_url'  => (is => 'ro', isa => 'Str',  required => 1);
 has 'json_data'  => (is => 'rw', isa => 'Str');
 has 'api'        => (is => 'ro', lazy_build => 1);  # Authenticated API
 
+our $_base_url = 'https://api.mendeley.com';
 has 'base_url' => (
     is => 'ro',
     isa => 'Str',
-    default => 'https://api.mendeley.com');
+    default => sub { return $_base_url} );
 
 has 'credentials' => (is => 'ro',
                       lazy_build => 1,
@@ -69,9 +70,8 @@ use Data::Dumper;
 # http://api.mendeley.com/oapi/documents/related/20418868?type=pmid&consumer_key=f67b2a45de14e07cc9658f779dd22a5804d32335b
 sub related_papers {
     my ($self,$id,$type) = @_;
-
     my $key = $self->fetch_mendeley_id($id,$type);
-
+    return;
     # Now get related documents.
     my $url    = 'documents/related';
     my $params = "$key";
@@ -88,21 +88,24 @@ sub related_papers {
 
 sub fetch_mendeley_id {
     my ($self,$id,$type) = @_;
-
+#    $id = 'DOI: 10.1103/PhysRevD.15.2752';
+#    $type = 'doi';
     # Example:
     # http://api.mendeley.com/oapi/documents/details/doi:10.1038\/nmeth.1454?type=doi;consumer-key=XXXX
-    my $url    = "documents/details/";
+    my $url    = "documents/";
 
     # KLUDGE. Mendeley chokes on single encoded DOIs.
     if ($type eq 'doi') {
         $id = uri_escape($id);
     }
-    $url = $url . $id;
+ #   $url = $url . $id;
 
     my $params = {
-        'type' => $type
+        identifiers => "doi:10.4018/jswis.2009081901"
     };
 
+
+print $id . "\n";
     # Make request
     my $response = $self->public_api_request($url,$params);
 
@@ -147,8 +150,11 @@ sub public_api_request {
     my $token = $self->token;
     return unless $token;
 
-    my $uri     = URI->new("$url");
+    my $uri     = URI->new($self->base_url);
+    $uri->path("$url");
     $uri->query_form($params);
+    print $uri;
+
     my $method = $args->{'method'} || 'GET';
     my $req = HTTP::Request->new(GET => $uri);
 
@@ -163,9 +169,9 @@ sub public_api_request {
         1;
     } || do {
         my $error_code = $@;
-        if ($error_code eq '401'){
-            $self->_build_token({ grant_type => 'refresh_token' });
-        }
+        # if ($error_code eq '401'){
+        #     $self->_build_token({ grant_type => 'refresh_token' });
+        # }
     };
 
     return $response;
@@ -186,7 +192,7 @@ sub send_request {
 print Dumper $response;
     unless ($response->is_success){
         my $response_code = $response->code;
-        print "Error code: $response_code " . $response->message;
+#        print "Error code: $response_code " . $response->message;
         die "$response_code";
     }
 
@@ -200,8 +206,10 @@ sub _build_token {
 
     my ($self, $args) = @_;
     my $grant_type = $args->{'grant_type'} || 'client_credentials';
-    my $uri     = URI->new("https://api-oauth2.mendeley.com/oauth/token"); #?grant_type=client_credentials"); #&scope=all&client_id=$client_id&client_secret=$client_secret");
-    my $req = POST("https://api-oauth2.mendeley.com/oauth/token",
+    my $uri     =  URI->new($_base_url);
+    $uri->path('oauth/token');
+
+    my $req = POST($uri,
                    [ grant_type  => $grant_type ],
                    Content_Type => 'application/x-www-form-urlencoded'
                );
@@ -211,7 +219,7 @@ sub _build_token {
 
     my $response = eval { $self->send_request($req) };
     my $token = $response;
-    print Dumper $response;
+
     return $token;
 }
 
