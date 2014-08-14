@@ -5,6 +5,7 @@ use JSON::Any;
 use Net::OAuth::Simple;
 use URI::Escape;
 use HTTP::Request;
+use HTTP::Request::Common;
 use LWP::UserAgent;
 use Encode;
 
@@ -71,10 +72,11 @@ sub related_papers {
     my $params = "$key";
 
     # Make request
-    my $response = $self->public_api_request($url,$params,'get');
+    my $response = eval { $self->public_api_request($url . "$key") };
 
     my $json = JSON::Any->new();
-    my $data = undef; $self->check_response($response) && $json->jsonToObj( $response->content );
+    my $data = undef;
+    $response && $json->jsonToObj( $response->content );
     return $data;
 }
 
@@ -97,10 +99,12 @@ sub fetch_mendeley_id {
     };
 
     # Make request
-    my $response = $self->public_api_request($url,$params,'get');
+    my $response = $self->public_api_request($url,$params);
 
     my $json = JSON::Any->new();
-    my $data = $self->check_response($response) && $json->jsonToObj( $response->content );
+    my $data;
+    $response && keys %{$response} && $response->content ;
+ #   my $data = $self->check_response($response) && $json->jsonToObj( $response->content );
     return $data->{key} if ref($data) eq 'HASH';
 }
 
@@ -133,24 +137,31 @@ sub fetch_mendeley_id {
 # }
 
 sub public_api_request {
-    my ($self,$url,$params,$method) = @_;
+    my ($self,$url,$params, $args) = @_;
+
+    my $token = $self->token;
+    return unless $token;
 
     my $uri     = URI->new("$url");
     $uri->query_form($params);
+    my $method = $args->{'method'} || 'GET';
     my $req = HTTP::Request->new(GET => $uri);
-    my $token = $self->token;
+
     $req->header(
-        'Authorization' => 'Bearer ' . $token,
+        'Authorization' => 'Bearer ' . $token->{'access_token'},
         'Content-Type' => 'application/json'
     );
-    my $lwp       = LWP::UserAgent->new;
-    my $response  = $lwp->request($req);
 
-
-#    die $uri;
-#    die $response->content;
-#     return $self->log->warn("$method on $uri failed: " . $response->status_line . " - " . $response->content)
-# 	unless ( $response->is_success );
+    my $response;
+    eval {
+        $response = $self->send_request($req);
+        1;
+    } || do {
+        my $error_code = $@;
+        if ($error_code eq '401'){
+            $self->_build_token({ grant_type => 'refresh_token' });
+        }
+    };
 
     return $response;
 }
@@ -162,31 +173,69 @@ sub url_as_json {
     $self->json_data($self->request);
 }
 
+sub send_request {
+    my ($self, $request) = @_;
+
+    my $lwp       = LWP::UserAgent->new;
+    my $response  = $lwp->request($request);
+print Dumper $response;
+    unless ($response->is_success){
+        my $response_code = $response->code;
+        print "Error code: $response_code " . $response->message;
+        die "$response_code";
+    }
+
+    my $json = new JSON;
+    return $json->allow_nonref->utf8->relaxed->decode($response->content);
+}
+# '_content' => '{"access_token":"MSwxNDA3NzI1ODcxMjE3LCw3MjIsLCxxaENUR3NqWFplRk1BMVp4TGZaeENHYktueU0","token_type":"bearer","expires_in":3600,"refresh_token":null}',
+
 
 sub _build_token {
 
-    my ($self) = @_;
+    my ($self, $args) = @_;
+    my $grant_type = $args->{'grant_type'} || 'client_credentials';
     my $uri     = URI->new("https://api-oauth2.mendeley.com/oauth/token"); #?grant_type=client_credentials"); #&scope=all&client_id=$client_id&client_secret=$client_secret");
-    my $req = HTTP::Request->new(POST => "https://api-oauth2.mendeley.com/oauth/token");
+    my $req = POST("https://api-oauth2.mendeley.com/oauth/token",
+                   [ grant_type  => $grant_type ],
+                   Content_Type => 'application/x-www-form-urlencoded'
+               );
+
     $req->authorization_basic($self->credentials->{'client_id'},
                               $self->credentials->{'client_secret'});
- #   $req->header('Content-Type' => 'application/x-www-form-urlencoded');
 
-    $req->header('Content-Type' => 'application/json');
+    my $response = eval { $self->send_request($req) };
+    my $token = $response;
+    print Dumper $response;
+    return $token;
+}
 
-    my $content = {
-        grant_type  => 'client_credentials',
-        client_id => $self->credentials->{'client_id'},
-        client_secret =>  $self->credentials->{'client_secret'},
-    }; #'client_credentials' };
-    my $json = new JSON;
-    my $request_json = $json->encode($content);
-# print $request_json;
-    $req->content($request_json);
+sub _build_token_old {
+
+    my ($self) = @_;
+    my $uri     = URI->new("https://api-oauth2.mendeley.com/oauth/token"); #?grant_type=client_credentials"); #&scope=all&client_id=$client_id&client_secret=$client_secret");
+    my $req = HTTP::Request->new(POST => "https://api-oauth2.mendeley.com/oauth/token",
+                                 [],  #
+                                 'grant_type=client_credentials');
+    $req->authorization_basic($self->credentials->{'client_id'},
+                              $self->credentials->{'client_secret'});
+
+  #  $req->content(grant_type  => 'client_credentials');
+    $req->header('Content-Type' => 'application/x-www-form-urlencoded');
+
+    # my $content = {
+    #     grant_type  => 'client_credentials',
+    #     client_id => $self->credentials->{'client_id'},
+    #     client_secret =>  $self->credentials->{'client_secret'},
+    # }; #'client_credentials' };
+#     my $json = new JSON;
+#     my $request_json = $json->encode($content);
+# # print $request_json;
+# #    $req->content($request_json);
 print $req->as_string();
     my $lwp       = LWP::UserAgent->new;
     my $response  = $lwp->request($req);
-print $response->as_string;
+print $response->as_string; print 'QQQQ';
     my $token = $response if $response->is_success();  #CHANGE this;
     return $token;
 }
