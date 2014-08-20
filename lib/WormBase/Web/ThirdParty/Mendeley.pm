@@ -115,11 +115,13 @@ sub public_api_request {
 
     my $response;
     eval {
-        $response = $self->send_request($req);
+        $response = $self->_send_request($req);
         1;
     } || do {
         my $error_code = $@;
         if ($error_code eq '401'){
+            # not ideal, user has to refresh the page to use the updatedd token
+            # keep simple for now
             $self->_build_token({ grant_type => 'refresh_token' });
         }
     };
@@ -127,7 +129,7 @@ sub public_api_request {
     return $response;
 }
 
-sub send_request {
+sub _send_request {
     my ($self, $request) = @_;
 
     my $lwp       = LWP::UserAgent->new;
@@ -160,39 +162,9 @@ sub _build_token {
     $req->authorization_basic($self->credentials->{'client_id'},
                               $self->credentials->{'client_secret'});
 
-    my $response = eval { $self->send_request($req) };
+    my $response = eval { $self->_send_request($req) };
     my $token = $response;
 
-    return $token;
-}
-
-sub _build_token_old {
-
-    my ($self) = @_;
-    my $uri     = URI->new("https://api-oauth2.mendeley.com/oauth/token"); #?grant_type=client_credentials"); #&scope=all&client_id=$client_id&client_secret=$client_secret");
-    my $req = HTTP::Request->new(POST => "https://api-oauth2.mendeley.com/oauth/token",
-                                 [],  #
-                                 'grant_type=client_credentials');
-    $req->authorization_basic($self->credentials->{'client_id'},
-                              $self->credentials->{'client_secret'});
-
-  #  $req->content(grant_type  => 'client_credentials');
-    $req->header('Content-Type' => 'application/x-www-form-urlencoded');
-
-    # my $content = {
-    #     grant_type  => 'client_credentials',
-    #     client_id => $self->credentials->{'client_id'},
-    #     client_secret =>  $self->credentials->{'client_secret'},
-    # }; #'client_credentials' };
-#     my $json = new JSON;
-#     my $request_json = $json->encode($content);
-# # print $request_json;
-# #    $req->content($request_json);
-print $req->as_string();
-    my $lwp       = LWP::UserAgent->new;
-    my $response  = $lwp->request($req);
-print $response->as_string; print 'QQQQ';
-    my $token = $response if $response->is_success();  #CHANGE this;
     return $token;
 }
 
@@ -211,45 +183,6 @@ sub _build_credentials {
         client_secret => $client_secret
     };
 }
-
-
-# sub send_request {
-#     my $self    = shift;
-#     my $class   = shift;
-#     my $url     = shift;
-#     my $method  = uc(shift);
-#     my @extra   = @_;
-
-#     my $uri   = URI->new($url);
-#     my %query = $uri->query_form;
-#     $uri->query_form({});
-
-#     my $request = $class->new(
-#         consumer_key     => $self->consumer_key,
-#         consumer_secret  => $self->consumer_secret,
-#         request_url      => $uri,
-#         request_method   => $method,
-#         signature_method => $self->signature_method,
-#         protocol_version => $self->oauth_1_0a ? Net::OAuth::PROTOCOL_VERSION_1_0A : Net::OAuth::PROTOCOL_VERSION_1_0,
-#         timestamp        => time,
-#         nonce            => $self->_nonce,
-#         extra_params     => \%query,
-#         @extra,
-# 	);
-#     $request->sign;
-#     return $self->_error("Couldn't verify request! Check OAuth parameters.")
-# 	unless $request->verify;
-
-#     my $params  = $request->to_hash;
-#     $uri->query_form(%$params);
-#     my $req      = HTTP::Request->new( $method => "$uri");
-#     my $response = $self->{browser}->request($req);
-#     return $self->_error("$method on ".$request->normalized_request_url." failed: ".$response->status_line." - ".$response->content)
-# 	unless ( $response->is_success );
-
-#     return $response;
-# }
-
 
 
 1;
