@@ -14,7 +14,7 @@
    '<h3>Related papers provided by <a href="http://mendeley.com">Mendeley</a>.</h3><br />';
 
 
-   related = c.model('Mendeley').related_papers(id,type);
+ WRAPPER $field_block key="related_papers";
    '<div id="results"><ul>';
    FOREACH paper IN related.documents;
        '<div class="result"><li>'
@@ -39,7 +39,7 @@
        '</div>';
     END;
     '</ul></div>';
+END;
 
 
 %]
-

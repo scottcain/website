@@ -3,6 +3,7 @@ package WormBase::API::Object::Paper;
 use Moose;
 use WormBase::Util::ParseName qw(parse_name parse_name_initials);
 use List::Util qw(first);
+use WormBase::Web::ThirdParty::Mendeley;
 
 with 'WormBase::API::Role::Object';
 extends 'WormBase::API::Object';
@@ -45,6 +46,15 @@ has '_parsed_authors' => (
 		my ($self) = @_;
 		return {map {$_ => [parse_name_initials($_)]} @{$self->_authors}};
 	},
+);
+
+our $_mendeley = WormBase::Web::ThirdParty::Mendeley->new;
+has 'mendeley' => (
+    is => 'ro',
+    lazy => 1,
+    default => sub {
+        return  $_mendeley; # just a blessed scalar ref
+    },
 );
 
 
@@ -362,6 +372,17 @@ sub pmid {
     };
 }
 
+sub related_papers {
+    my $self = shift;
+    my @related;
+    if ($self->pmid->{'data'}){
+        @related = $self->mendeley->related_papers($self->pmid->{'data'}, 'pmid');
+    } elsif ($self->doi->{'data'}) {
+        @related = $self->mendeley->related_papers($self->doi->{'data'}, 'doi');
+    }
+    return { description => 'Related papers',
+             data => @related ? \@related : undef };
+}
 
 # history { }
 # This method will return a data structure containing
@@ -552,5 +573,3 @@ sub strains {
 __PACKAGE__->meta->make_immutable;
 
 1;
-
-

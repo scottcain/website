@@ -9,14 +9,7 @@ use HTTP::Request::Common;
 use LWP::UserAgent;
 use Encode;
 
-has 'consumer_key'       => (is => 'ro', isa => 'Str',  required => 1);
-has 'consumer_secret'    => (is => 'ro', isa => 'Str',  required => 1);
-has 'authorization_url'  => (is => 'ro', isa => 'Str',  required => 1);
-has 'access_token_url'   => (is => 'ro', isa => 'Str',  required => 1);
-has 'request_token_url'  => (is => 'ro', isa => 'Str',  required => 1);
 
-has 'json_data'  => (is => 'rw', isa => 'Str');
-has 'api'        => (is => 'ro', lazy_build => 1);  # Authenticated API
 
 our $_base_url = 'https://api.mendeley.com';
 has 'base_url' => (
@@ -27,7 +20,7 @@ has 'base_url' => (
 has 'credentials' => (is => 'ro',
                       lazy_build => 1,
                       'builder' => '_build_credentials');
-has 'token'      => (is => 'rw', 'builder' => '_build_token');
+has 'token'      => (is => 'rw', lazy_build => 1, 'builder' => '_build_token');
 
 use Data::Dumper;
 # sub _build_api {
@@ -70,79 +63,37 @@ use Data::Dumper;
 # http://api.mendeley.com/oapi/documents/related/20418868?type=pmid&consumer_key=f67b2a45de14e07cc9658f779dd22a5804d32335b
 sub related_papers {
     my ($self,$id,$type) = @_;
-    my $key = $self->fetch_mendeley_id($id,$type);
+    return unless $id;
+
+    my $mendeley_obj = $self->fetch_mendeley_object($id,$type);
+    return unless $mendeley_obj;
     return;
     # Now get related documents.
-    my $url    = 'documents/related';
-    my $params = "$key";
 
-    # Make request
-    my $response = eval { $self->public_api_request($url . "$key") };
-
-    my $json = JSON::Any->new();
-    my $data = undef;
-    $response && $json->jsonToObj( $response->content );
-    return $data;
 }
 
-
-sub fetch_mendeley_id {
+# Example:
+# $id = '10.1016/j.febslet.2005.08.001'
+# https://api.mendeley.com:443/catalog?doi=10.1016%2Fj.febslet.2005.08.001
+# $id = '16162338'
+# https://api.mendeley.com:443/catalog?pmid=16162338
+sub fetch_mendeley_object {
     my ($self,$id,$type) = @_;
-#    $id = 'DOI: 10.1103/PhysRevD.15.2752';
-#    $type = 'doi';
-    # Example:
-    # http://api.mendeley.com/oapi/documents/details/doi:10.1038\/nmeth.1454?type=doi;consumer-key=XXXX
-    my $url    = "documents/";
+    my $url    = "catalog/";
 
     # KLUDGE. Mendeley chokes on single encoded DOIs.
     if ($type eq 'doi') {
         $id = uri_escape($id);
     }
- #   $url = $url . $id;
 
     my $params = {
-        identifiers => "doi:10.4018/jswis.2009081901"
+        $type => $id,
     };
 
-
-print $id . "\n";
     # Make request
-    my $response = $self->public_api_request($url,$params);
-
-    my $json = JSON::Any->new();
-    my $data;
-    $response && keys %{$response} && $response->content ;
- #   my $data = $self->check_response($response) && $json->jsonToObj( $response->content );
-    return $data->{key} if ref($data) eq 'HASH';
+    my $result = $self->public_api_request($url, $params);
+    return @{$result} ? pop @{$result} : undef;
 }
-
-
-
-
-# # Try and find a paper on Mendeley.
-# # Provided with a pubmed ID, find the corresponding
-# # Mendeley entry.
-# # http://api.mendeley.com/oapi/documents/details/20418868?type=pmid&consumer_key=f67b2a45de14e07cc9658f779dd22a5804d32335b
-# sub search_papers {
-#     my ($self,$id,$type) = @_;
-
-#     # Example:
-#     # http://api.mendeley.com/oapi/documents/details/doi:10.1038\/nmeth.1454?type=doi;consumer-key=XXXX
-#     my $url    = 'https://api-oauth2.mendeley.com/oapi/documents/details';
-#     my $params = uri_escape($id);
-
-#     # KLUDGE. Mendeley chokes on single encoded DOIs.
-#     if ($type eq 'doi') {
-# 	$params = uri_escape($params) . "?type=$type";
-#     } else {
-# 	$params = $params . "?type=$type";
-#     }
-
-#     # Make request
-#     my $response = $self->public_api_request($url,$params,'get');
-
-#     return $response;
-# }
 
 sub public_api_request {
     my ($self,$url,$params, $args) = @_;
@@ -153,7 +104,6 @@ sub public_api_request {
     my $uri     = URI->new($self->base_url);
     $uri->path("$url");
     $uri->query_form($params);
-    print $uri;
 
     my $method = $args->{'method'} || 'GET';
     my $req = HTTP::Request->new(GET => $uri);
@@ -169,19 +119,12 @@ sub public_api_request {
         1;
     } || do {
         my $error_code = $@;
-        # if ($error_code eq '401'){
-        #     $self->_build_token({ grant_type => 'refresh_token' });
-        # }
+        if ($error_code eq '401'){
+            $self->_build_token({ grant_type => 'refresh_token' });
+        }
     };
 
     return $response;
-}
-
-
-sub url_as_json {
-    my ($self,$url,$format) = @_;
-    $format ||= 'json';
-    $self->json_data($self->request);
 }
 
 sub send_request {
@@ -189,7 +132,8 @@ sub send_request {
 
     my $lwp       = LWP::UserAgent->new;
     my $response  = $lwp->request($request);
-print Dumper $response;
+print $request->url . "\n";
+#print Dumper $response;
     unless ($response->is_success){
         my $response_code = $response->code;
 #        print "Error code: $response_code " . $response->message;
@@ -199,7 +143,6 @@ print Dumper $response;
     my $json = new JSON;
     return $json->allow_nonref->utf8->relaxed->decode($response->content);
 }
-# '_content' => '{"access_token":"MSwxNDA3NzI1ODcxMjE3LCw3MjIsLCxxaENUR3NqWFplRk1BMVp4TGZaeENHYktueU0","token_type":"bearer","expires_in":3600,"refresh_token":null}',
 
 
 sub _build_token {
@@ -307,12 +250,6 @@ sub _build_credentials {
 #     return $response;
 # }
 
-
-sub check_response {
-    my ($self, $response) = @_;
-    my $ok = $response->code eq '200';
-    return $ok;
-}
 
 
 1;
