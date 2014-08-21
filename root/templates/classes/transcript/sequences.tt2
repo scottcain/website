@@ -1,9 +1,10 @@
+
 [%
   WRAPPER $field_block title="Upstream and Downstream added";
-    '<form>';
+    '<form name="sequence_form">';
     'Upstream: <input type="text" id="upstream" value=0><br>';
     'Downstream: <input type="text" id="downstream" value=0><br>';
-    '<input type="submit" value="generate sequence" id="sequence_submit" rel="/sequence/get_up()/get_down()">;
+    '<input type="submit" onClick="WB.submit_sequence($jq(this));" value="generate sequence" id="sequence_submit" rel="[% c.uri_for('/sequence').path  %]">;
     '</form>';
   END;
 

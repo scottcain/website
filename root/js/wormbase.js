@@ -1463,6 +1463,28 @@ var Scrolling = (function(){
         return false;
    },
 
+  submit_sequence: function(is){
+    var rel= is.attr("rel"),
+        form = is.closest("#submit_sequence"),
+        up = form.find("#upstream"),
+        down = form.find("#downstream");
+
+    $jq.ajax({
+          type: 'POST',
+          url: rel,
+          dataType: 'json',
+          data: {
+            upstream: up.val(),
+            downstream: down.val()},
+          // success: function(data){
+          //         message.append(data.message);
+          //     },
+          // error: function(xhr,status,error) {
+          //         message.append(ajaxError(xhr));
+          //     }
+        });
+  }
+
    addNewIssue: function(link){
         var issue = link.closest('#issue-box-content').find('#issues-new');
         issue.children().not('.anon').show();

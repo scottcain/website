@@ -641,6 +641,7 @@ sub widget_GET {
     my $headers = $c->req->headers;
     my $content_type
         = $headers->content_type
+
         || $c->req->params->{'content-type'}
         || 'text/html';
     $c->response->header( 'Content-Type' => $content_type );
@@ -657,15 +658,15 @@ sub widget_GET {
     if($cached_data && (ref $cached_data eq 'HASH')){
         $c->stash->{fields} = $cached_data;
 
-	# Served from cache? Let's include a link to it in the cache.
-	# Primarily a debugging element.
+  # Served from cache? Let's include a link to it in the cache.
+  # Primarily a debugging element.
 	$c->stash->{served_from_cache} = $key;
     } elsif ($cached_data && (ref $cached_data ne 'HASH') && ($content_type eq 'text/html')) {
         $c->response->status(200);
         $c->response->body($cached_data);
         $c->detach();
         return;
-    } else {
+    } else {email
         my $api = $c->model('WormBaseAPI');
         my $object = ($name eq '*' || $name eq 'all'
                    ? $api->instantiate_empty(ucfirst $class)
@@ -1401,12 +1402,15 @@ sub _get_page {
 }
 
 #sequence 
-sub sequence :Path('/sequence') :Args(2) :ActionClass('REST') {}
+sub sequence :Path('/sequence') :Args :ActionClass('REST') {}
 
 sub sequence_POST{
-  my ( $self, $c, $up_stream, $down_stream ) = @_;
+  my ( $self, $c ) = @_;
 
-  my $object = transcript;
+  my $up_stream= $c->req->params->{upstream};
+  my $up_stream= $c->req->params->{downstream};
+  
+  my $object = $api->fetch({ class => ucfirst $class, name => $name });
   my $data   = $object->print_sequence($up_stream, $down_stream);
   $c->stash->{$field} = $data;
 } 
