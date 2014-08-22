@@ -147,8 +147,7 @@ sub finalize_config { # overriding Plugin::ConfigLoader
 sub _setup_log4perl {
     # Specific loggers for different environments
     my $c = shift;
-    my $installation_type = $c->config->{installation_type};
-    $installation_type ||= 'development';
+    my $installation_type = $c->config->{installation_type} || 'development';
     my $path = $c->path_to('conf', 'log4perl',"$installation_type.conf");
     $c->log(Log::Log4perl::Catalyst->new($path->stringify));
 #    $c->log(Catalyst::Log::Log4perl->new($path->stringify));

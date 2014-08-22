@@ -27,7 +27,10 @@ source /usr/local/wormbase/wormbase.env
 # If the APP environment variable isn't set,
 # assume we are running in production.
 if [ ! $APP ]; then
-    echo "   ---> APP is not defined; assuming a production deployment using wormbase_production.conf"
+    echo "   ---> APP is set not defined..."
+    echo "        Assuming we are a production deployment."
+    echo "        Using wormbase_production.conf."
+
     export APP=production
 
     # Application defaults
@@ -42,8 +45,9 @@ if [ ! $APP ]; then
     export CATALYST_CONFIG_LOCAL_SUFFIX=$APP
 
 elif [ $APP == 'staging' ]; then
-    echo "   ---> APP is set to staging: assuming we are host:staging.wormbase.org using wormbase_staging.conf"
-
+    echo "   ---> APP is set to staging..."
+    echo "        Assuming we are host:staging.wormbase.org."
+    echo "        Using wormbase_staging.conf."
     # reduce the number of workers.
     export DAEMONIZE=true
     export PORT=5000
@@ -65,21 +69,22 @@ elif [ $APP == 'qaqc' ]; then
     export WORKERS=8
     export MAX_REQUESTS=500
 
-    # The suffix for the configuration file to use.
-    # This will take precedence over wormbase_local.conf
-    # Primarily used to override the location of the user database.
-    export CATALYST_CONFIG_LOCAL_SUFFIX=$APP
-
 else
-    echo "   ---> APP is set to ${APP}: using wormbase_local.conf"
-
+    echo "   ---> APP is set to ${APP}: using wormbase_local.conf"    
+    # In this case, $ENV{APP} is typically something like "tharris"
+    
     # Assume these to all be set in the local environment
     export PORT=9001
     export WORKERS=3
-    export CATALYST_CONFIG_LOCAL_SUFFIX=local
     export STARMAN_DEBUG=1
+    export CATALYST_CONFIG_LOCAL_SUFFIX=local
 
 fi
+
+# The suffix for the configuration file to use.
+# This will take precedence over wormbase_local.conf
+# Primarily used to override the location of the user database.
+export CATALYST_CONFIG_LOCAL_SUFFIX=$APP
 
 # The actual path on disk to the application.
 export APP_HOME=`pwd`
@@ -95,8 +100,8 @@ PIDFILE="$APP_HOME/logs/wormbase.pid"
 
 # Starman access/error logs. Log4perl sets up the app-
 # specific logs.
-ERROR_LOG="$APP_HOME/logs/wormbase-starman-error.log"
-ACCESS_LOG="$APP_HOME/logs/wormbase-starman-access.log"
+ERROR_LOG="$APP_HOME/logs/starman-error.log"
+ACCESS_LOG="$APP_HOME/logs/starman-access.log"
 STATUS="$APP_HOME/logs/wormbase.status"
 
 if [ ! -d "$APP_HOME" ]; then
@@ -128,9 +133,6 @@ STARMAN_OPTS="-I$APP_HOME/lib --access-log $ACCESS_LOG --error-log $ERROR_LOG --
 # start_server configuration
 START_SERVER_DAEMON=`which start_server`
 START_SERVER_DAEMON_OPTS="--pid-file=$PIDFILE --status-file=$STATUS --port $PORT -- $STARMAN $STARMAN_OPTS"
-
-# Why?
-#. $HOME/perl5/perlbrew/etc/bashrc
 
 cd $APP_HOME
 

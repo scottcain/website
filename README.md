@@ -34,14 +34,19 @@ On Mac OS X, Perl comes preinstalled. The C development tools are installed from
 Running the application
 -----------------------
 
-To run the app using the built-in Catalyst server:
+There are several different ways of running the application.
+
+1. Run the app using the built-in Catalyst server:
 
     script/wormbase_server.pl -p 8000
 
-Running the application via Starman
------------------------------------
+2. Running the application via Starman
 
     starman --port 8000 --workers 10 wormbase.psgi
+
+3. Run the application in daemon mode
+
+   ./script/wormbase-daemon.sh   // Will look for $ENV{APP}; if defined will use a specific config file.
 
 Unit Testing
 ------------

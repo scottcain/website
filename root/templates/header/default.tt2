@@ -52,8 +52,7 @@
 
   <div id="title">
       <a href="/" title="WormBase Home">
-          <img src="/img/logo/logo_wormbase_gradient_small.png" />
-          <!-- <h1>[%# template.title or c.config.site_name %]</h1> -->
+          <img src="/img/logo/logo_wormbase_gradient_small.png" alt="[%- c.config.site_name -%]"/>
       </a>
     <div class="release_date">
       <p>
