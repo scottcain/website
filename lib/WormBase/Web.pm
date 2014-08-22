@@ -15,8 +15,8 @@ use Test::More;
 use threads;
 
 use Catalyst qw/
-      ConfigLoader
-	  Cache
+          ConfigLoader
+          Cache
 	  Static::Simple
 	  Unicode
 	  ErrorCatcher
@@ -26,12 +26,12 @@ use Catalyst qw/
 	  Session::PerUser
 	  Session::Store::DBI
  	  Session::State::Cookie
-      StackTrace
+          StackTrace
 	  Scheduler
 /;
 
 extends 'Catalyst';
-our $VERSION = '0.02';
+our $VERSION = '1.0';
 
 # Application-wide configuration is located in wormbase.conf
 # which can be over-ridden by wormbase_local.conf.
@@ -147,9 +147,9 @@ sub finalize_config { # overriding Plugin::ConfigLoader
 sub _setup_log4perl {
     # Specific loggers for different environments
     my $c = shift;
-#    my $path = $c->path_to('conf', 'log4perl',
-#                           $c->config->{installation_type} . '.conf');
-    my $path = $c->path_to('conf', 'log4perl','root.conf');
+    my $installation_type = $c->config->{installation_type};
+    $installation_type ||= 'development';
+    my $path = $c->path_to('conf', 'log4perl',"$installation_type.conf");
     $c->log(Log::Log4perl::Catalyst->new($path->stringify));
 #    $c->log(Catalyst::Log::Log4perl->new($path->stringify));
     Log::Any::Adapter->set({ category => qr/^CHI/ }, 'Log4perl');
