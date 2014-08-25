@@ -355,7 +355,7 @@ sub _build__segments {
 
 
 sub _print_unspliced {
-    my ($markup,$seq_obj,$unspliced,@features) = @_;
+    my ($self,$seq_obj,$unspliced,@features) = @_;
     my $name = $seq_obj->info . ' (' . $seq_obj->start . '-' . $seq_obj->stop . ')';
 
     my $length   = length $unspliced;
@@ -377,7 +377,7 @@ sub _print_unspliced {
         push @markup,map {['space',10*$_]}   (1..length($unspliced)/10);
         push @markup,map {['newline',80*$_]} (1..length($unspliced)/80);
 #       my $download = _to_fasta("$name|unspliced + UTR - $length bp",$unspliced);
-        $markup->markup(\$unspliced,\@markup);
+        $self->markup_scheme->markup(\$unspliced,\@markup);
         return {
             #download => $download,
             header=>"unspliced + UTR",
@@ -392,7 +392,7 @@ sub _print_unspliced {
 # Fetch and markup the spliced DNA
 # markup alternative exons
 sub _print_spliced {
-    my ($markup,@features) = @_;
+    my ($self, @features) = @_;
     my $spliced = join('',map {$_->dna} @features);
     my $splen   = length $spliced;
     my $last    = 0;
@@ -401,6 +401,7 @@ sub _print_spliced {
     my $prefasta = $spliced;
     for my $feature (@features) {
         my $length = $feature->stop - $feature->start + 1;
+print "length!! $length\n";
         my $style  = $feature->method =~ /UTR/i ? 'utr' : 'cds' . $counter++ %2;
         my $end = $last + $length;
         push @markup,[$style,$last,$end];
@@ -412,7 +413,7 @@ sub _print_spliced {
     push @markup,map {['newline',80*$_]} (1..length($spliced)/80);
     my $name = eval { $features[0]->refseq->name } ;
 #   my $download=_to_fasta("$name|spliced + UTR - $splen bp",$spliced);
-    $markup->markup(\$spliced,\@markup);
+    $self->markup_scheme->markup(\$spliced,\@markup);
 
     return {                    # download => $download ,
         header=>"spliced + UTR",
@@ -424,7 +425,7 @@ sub _print_spliced {
 }
 
 sub _print_protein {
-    my ($markup,$features,$genetic_code) = @_;
+    my ($self,$features,$genetic_code) = @_;
 #   my @markup;
     my $trimmed = join('',map {$_->dna} grep {$_->method eq 'coding_exon'} @$features);
     return unless $trimmed;     # Hack for mRNA
@@ -502,4 +503,3 @@ sub _get_parent_coords {
 __PACKAGE__->meta->make_immutable;
 
 1;
-
