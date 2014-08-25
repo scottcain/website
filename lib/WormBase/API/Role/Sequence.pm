@@ -41,6 +41,31 @@ has 'genes' => (
     },
    );
 
+
+# the corresponding sequence object got from GFF database
+has 'seq_obj' =>  (
+    is  => 'ro',
+    lazy => 1,
+    isa => 'Maybe[Object]',
+    builder => '_build__seq_obj'
+);
+
+our $_markup_scheme = Bio::Graphics::Browser2::Markup->new;
+$_markup_scheme->add_style('utr'  => 'FGCOLOR gray');
+$_markup_scheme->add_style('cds'  => 'BGCOLOR cyan');
+$_markup_scheme->add_style('cds0' => 'BGCOLOR yellow');
+$_markup_scheme->add_style('cds1' => 'BGCOLOR orange');
+$_markup_scheme->add_style('uc'   => 'UPPERCASE');
+$_markup_scheme->add_style('newline' => "\n");
+$_markup_scheme->add_style('space'   => '');
+
+has 'markup_scheme' => (
+    is  => 'ro',
+    lazy => 1,
+    default => sub {
+        $_markup_scheme;
+    }
+);
 #######################################################
 #
 # Generic methods, shared across Sequence, CDS, and Transcript classes.
@@ -915,25 +940,8 @@ sub print_sequence {
     my ($self) = @_;
     my $s = $self->object;
     my @data;
-    my $gff = $self->gff || goto END;
-    my $seq_obj;
 
-    # Genomic clones need to be fetched a bit differently.
-    unless ($s->class =~ /Sequence|Clone/i) {
-        ($seq_obj) = sort {$b->length<=>$a->length}
-                        grep {$_->primary_tag eq 'mRNA'} $gff->get_features_by_name($s);
-
-        # BLECH!  If provided with a gene ID and alt splices are present just guess
-        # and fetch the first CDS or Transcript
-        # We really should display a list for all of these.
-
-        ($seq_obj) = $seq_obj ? ($seq_obj) : sort {$b->length<=>$a->length}
-                grep {$_->primary_tag eq 'mRNA'} $gff->get_features_by_name("$s.a");
-        ($seq_obj) = $seq_obj ? ($seq_obj) : sort {$b->length<=>$a->length}
-                grep {$_->primary_tag eq 'mRNA'} $gff->get_features_by_name("$s.1");
-    #    $seq_obj->{'start'} = '13261546';
-     #   $seq_obj->{'stop'} = '13272524';
-    }
+    my $seq_obj = $self->seq_obj;  # try the GFF first
 
     # Haven't fetched a GFF segment? Try Ace.
     # miserable broken workaround
@@ -958,30 +966,17 @@ sub print_sequence {
 
     my $unspliced = lc $seq_obj->dna;
     my $length = length($unspliced);
+
     if (eval { $s->Coding_pseudogene } || eval {$s->Coding} || eval {$s->Corresponding_CDS}) {
-        my $markup = Bio::Graphics::Browser2::Markup->new;
-        $markup->add_style('utr'  => 'FGCOLOR gray');
-        $markup->add_style('cds'  => 'BGCOLOR cyan');
-        $markup->add_style('cds0' => 'BGCOLOR yellow');
-        $markup->add_style('cds1' => 'BGCOLOR orange');
-        $markup->add_style('uc'   => 'UPPERCASE');
-        $markup->add_style('newline' => "\n");
-        $markup->add_style('space'   => '');
-        my %seenit;
 
         # local coordinates
         $seq_obj->ref($seq_obj);
 
-        # sort by stop if on -ve strand
-        my @features = grep { $_->primary_tag ne 'intron' && $_->primary_tag ne 'exon'}
-            map { $_->primary_tag eq 'CDS' ? ($_->get_SeqFeatures) : ($_) }
-            $seq_obj->get_SeqFeatures();
+        my @features = $self->_get_ordered_features($seq_obj);
 
-        @features = ($seq_obj->strand > 0) ? sort { $a->start <=> $b->start } @features : sort { $b->stop <=> $a->stop } @features;
-
-        push @data, _print_unspliced($markup,$seq_obj,$unspliced,@features);
-        push @data, _print_spliced($markup,@features);
-        push @data, _print_protein($markup,\@features) unless eval { $s->Coding_pseudogene };
+        push @data, $self->_print_unspliced($seq_obj,$unspliced,@features);
+        push @data, $self->_print_spliced(@features);
+        push @data, $self->_print_protein(\@features) unless eval { $s->Coding_pseudogene };
     } else {
         # Otherwise we've got genomic DNA here
         push @data, {
@@ -993,11 +988,49 @@ sub print_sequence {
     $self->length($length);
 
     END:
-print Dumper @data;
     return { description => 'the sequence of the sequence',
              data        => @data ? \@data : undef };
 }
 
+sub _build__seq_obj {
+    my ($self) = @_;
+    return unless $self->gff;
+
+    my $gff = $self->gff;
+    my $s = $self->object;
+    my $seq_obj;
+
+    # Genomic clones need to be fetched a bit differently.
+    unless ($s->class =~ /Sequence|Clone/i) {
+        ($seq_obj) = sort {$b->length<=>$a->length}
+                        grep {$_->primary_tag eq 'mRNA'} $gff->get_features_by_name($s);
+
+        # BLECH!  If provided with a gene ID and alt splices are present just guess
+        # and fetch the first CDS or Transcript
+        # We really should display a list for all of these.
+
+        ($seq_obj) = $seq_obj ? ($seq_obj) : sort {$b->length<=>$a->length}
+                grep {$_->primary_tag eq 'mRNA'} $gff->get_features_by_name("$s.a");
+        ($seq_obj) = $seq_obj ? ($seq_obj) : sort {$b->length<=>$a->length}
+                grep {$_->primary_tag eq 'mRNA'} $gff->get_features_by_name("$s.1");
+    #    $seq_obj->{'start'} = '13261546';
+     #   $seq_obj->{'stop'} = '13272524';
+    }
+    return $seq_obj;
+
+}
+
+sub _get_ordered_features {
+    my ($self, $seq_obj) = @_;
+    # sort by stop if on -ve strand
+    my @features = grep { $_->primary_tag ne 'intron' && $_->primary_tag ne 'exon'}
+        map { $_->primary_tag eq 'CDS' ? ($_->get_SeqFeatures) : ($_) }
+            $seq_obj->get_SeqFeatures();
+
+    @features = ($seq_obj->strand > 0) ? sort { $a->start <=> $b->start } @features : sort { $b->stop <=> $a->stop } @features;
+
+    return @features;
+}
 
 sub print_extend_sequence {
     my ($self, $args) = @_;
@@ -1500,7 +1533,8 @@ sub _build__segments {
 }
 
 sub _print_unspliced {
-    my ($markup,$seq_obj,$unspliced,@features) = @_;
+    my ($self, $seq_obj,$unspliced, @features) = @_;
+print Dumper $seq_obj;
     my $name = $seq_obj . ' (' . $seq_obj->start . '-' . $seq_obj->stop . ')';
     my $length_all   = length $unspliced;
     if ($length_all > 0) {
@@ -1520,7 +1554,7 @@ sub _print_unspliced {
         }
         push @markup,map {['space',10*$_]}   (1..length($unspliced)/10);
         push @markup,map {['newline',80*$_]} (1..length($unspliced)/80);
-        $markup->markup(\$unspliced,\@markup);
+        $self->markup_scheme->markup(\$unspliced,\@markup);
         return {
             header=>"unspliced + UTR",
             sequence=>$unspliced,
@@ -1533,7 +1567,7 @@ sub _print_unspliced {
 # Fetch and markup the spliced DNA
 # markup alternative exons
 sub _print_spliced {
-    my ($markup,@features) = @_;
+    my ($self, @features) = @_;
     my $spliced = join('',map {$_->dna} @features);
     my $splen   = length $spliced;
     my $last    = 0;
@@ -1552,7 +1586,7 @@ sub _print_spliced {
 
     push @markup,map {['space',10*$_]}   (1..length($spliced)/10);
     push @markup,map {['newline',80*$_]} (1..length($spliced)/80);
-    $markup->markup(\$spliced,\@markup);
+    $self->markup_scheme->markup(\$spliced,\@markup);
     return {
         header=>"spliced + UTR",
         sequence=>$spliced,
@@ -1563,7 +1597,7 @@ sub _print_spliced {
 }
 
 sub _print_protein {
-    my ($markup,$features,$genetic_code) = @_;
+    my ($self,$features,$genetic_code) = @_;
 #   my @markup;
     my $trimmed = join('',map {$_->dna} grep {$_->primary_tag eq 'CDS'} @$features);
     return unless $trimmed;     # Hack for mRNA
