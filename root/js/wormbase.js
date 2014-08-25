@@ -1464,28 +1464,6 @@ var Scrolling = (function(){
         return false;
    },
 
-  submit_sequence: function(is){
-    var rel= is.attr("rel"),
-        form = is.closest("#submit_sequence"),
-        up = form.find("#upstream"),
-        down = form.find("#downstream");
-
-    $jq.ajax({
-          type: 'POST',
-          url: rel,
-          dataType: 'json',
-          data: {
-            upstream: up.val(),
-            downstream: down.val()},
-          // success: function(data){
-          //         message.append(data.message);
-          //     },
-          // error: function(xhr,status,error) {
-          //         message.append(ajaxError(xhr));
-          //     }
-        });
-  }
-
    addNewIssue: function(link){
         var issue = link.closest('#issue-box-content').find('#issues-new');
         issue.children().not('.anon').show();
@@ -1493,8 +1471,33 @@ var Scrolling = (function(){
         issue.find("input[type=text], textarea").val("");
         link.closest('#add-new-issue').hide();
    },
-  }
+  };
 
+  // used to retrieve up and down stream of a sequence by the number of bases specified by the user
+  var ExtendSequence = {
+      submit: function(el){
+          var rel= el.attr("rel"),
+              form = el.closest("#extended_seq"),
+              up = form.find("#num_upstream").val(),
+              down = form.find("#num_downstream").val();
+
+          $jq.ajax({
+              type: 'GET',
+              url: rel,
+              dataType: 'json',
+              data: {
+                  upstream: up,
+                  downstream: down
+              },
+              success: function(data){
+                 // message.append(data.message);
+              },
+              error: function(xhr,status,error) {
+                 // message.append(ajaxError(xhr));
+              }
+          });
+      }
+  };
 
   var StaticWidgets = {
     update: function(widget_id, path){
@@ -2082,7 +2085,10 @@ var Scrolling = (function(){
       validate_fields: validate_fields,             // validate form fields
       recordOutboundLink: recordOutboundLink,       // record external links
       setupCytoscape: setupCytoscape,               // setup cytoscape for use
-      reloadWidget: reloadWidget                    // reload a widget
+      reloadWidget: reloadWidget,                   // reload a widget
+
+      // interact with object fields
+      extendSequence: ExtendSequence                // specify and retrieve up/downstream of sequence
     }
   })();
 

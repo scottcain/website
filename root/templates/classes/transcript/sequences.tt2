@@ -1,13 +1,15 @@
+[% USE Dumper %]
+
+[% Dumper.dump(fields.name.data.id) %]
+<div id="extended_seq">
+    Number of bases upstream:
+    <input type="text" id="num_upstream" value=0>
+    Number of bases downstream:
+    <input type="text" id="num_downstream" value=0>
+    <input type="submit" onClick="WB.extendSequence.submit($jq(this))" value="generate sequence" id="sequence_submit" rel="[% c.uri_for('/rest','field','transcript', fields.name.data.id, 'print_extend_sequence').path %]">
+</div>
 
 [%
-  WRAPPER $field_block title="Upstream and Downstream added";
-    '<form name="sequence_form">';
-    'Upstream: <input type="text" id="upstream" value=0><br>';
-    'Downstream: <input type="text" id="downstream" value=0><br>';
-    '<input type="submit" onClick="WB.submit_sequence($jq(this));" value="generate sequence" id="sequence_submit" rel="[% c.uri_for('/sequence').path  %]">;
-    '</form>';
-  END;
-
   sequence('print_sequence');
 
   WRAPPER $field_block title="Strand" key='strand';
@@ -45,13 +47,3 @@
   END;
 
 %]
-
-<script>
-function get_up() {
-    document.getElementById("upstream").value;
-}
-
-function get_down() {
-    document.getElementById("downstream").value;
-}
-</script>

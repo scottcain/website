@@ -641,7 +641,6 @@ sub widget_GET {
     my $headers = $c->req->headers;
     my $content_type
         = $headers->content_type
-
         || $c->req->params->{'content-type'}
         || 'text/html';
     $c->response->header( 'Content-Type' => $content_type );
@@ -666,7 +665,7 @@ sub widget_GET {
         $c->response->body($cached_data);
         $c->detach();
         return;
-    } else {email
+    } else {
         my $api = $c->model('WormBaseAPI');
         my $object = ($name eq '*' || $name eq 'all'
                    ? $api->instantiate_empty(ucfirst $class)
@@ -1344,14 +1343,14 @@ sub field_GET {
                  ? $api->instantiate_empty(ucfirst $class)
                  : $api->fetch({ class => ucfirst $class, name => $name });
 
-      my $data   = $object->$field();
+      my $data   = $object->$field($c->req->params);
       $c->stash->{$field} = $data;
 
       # Include the full uri to the *requested* object.
       # IE the page on WormBase where this should go.
       # TODO: 2011.03.20 TH: THIS NEEDS TO BE UPDATED, TESTED, VERIFIED
 
-      $c->set_cache($key => $data);
+      $c->set_cache($key => $data) unless $data->{'skip_cache'};
     }
 
     # Supress boilerplate wrapping.
@@ -1401,19 +1400,19 @@ sub _get_page {
     return $c->model('Schema::Page')->search({url=>$url}, {rows=>1})->next;
 }
 
-#sequence 
-sub sequence :Path('/sequence') :Args :ActionClass('REST') {}
+# #sequence
+# sub sequence :Path('/sequence') :Args :ActionClass('REST') {}
 
-sub sequence_POST{
-  my ( $self, $c ) = @_;
+# sub sequence_POST{
+#   my ( $self, $c ) = @_;
 
-  my $up_stream= $c->req->params->{upstream};
-  my $up_stream= $c->req->params->{downstream};
-  
-  my $object = $api->fetch({ class => ucfirst $class, name => $name });
-  my $data   = $object->print_sequence($up_stream, $down_stream);
-  $c->stash->{$field} = $data;
-} 
+#   my $up_stream= $c->req->params->{upstream};
+#   my $up_stream= $c->req->params->{downstream};
+
+#   # my $object = $api->fetch({ class => ucfirst $class, name => $name });
+#   # my $data   = $object->print_sequence($up_stream, $down_stream);
+#   # $c->stash->{$field} = $data;
+# }
 
 ########################################
 #

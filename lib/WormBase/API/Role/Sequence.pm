@@ -2,6 +2,7 @@ package WormBase::API::Role::Sequence;
 
 use Moose::Role;
 
+    use Data::Dumper;
 #######################################################
 #
 # Attributes
@@ -930,11 +931,8 @@ sub print_sequence {
                 grep {$_->primary_tag eq 'mRNA'} $gff->get_features_by_name("$s.a");
         ($seq_obj) = $seq_obj ? ($seq_obj) : sort {$b->length<=>$a->length}
                 grep {$_->primary_tag eq 'mRNA'} $gff->get_features_by_name("$s.1");
-
-        #####################################
-        use Data::Dumper; print Dumper $seq_obj->{'start'};
-        $seq_obj->{'start'} = '13261546';
-        $seq_obj->{'stop'} = '13272524';
+    #    $seq_obj->{'start'} = '13261546';
+     #   $seq_obj->{'stop'} = '13272524';
     }
 
     # Haven't fetched a GFF segment? Try Ace.
@@ -995,8 +993,19 @@ sub print_sequence {
     $self->length($length);
 
     END:
+print Dumper @data;
     return { description => 'the sequence of the sequence',
              data        => @data ? \@data : undef };
+}
+
+
+sub print_extend_sequence {
+    my ($self, $args) = @_;
+    my $num_upstream = $args->{'upstream'};
+    my $num_downstream = $args->{'downstream'};
+
+    print Dumper $args;
+
 }
 
 =head3 print_homologies
