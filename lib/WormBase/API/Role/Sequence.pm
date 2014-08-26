@@ -940,54 +940,59 @@ sub print_sequence {
     my ($self) = @_;
     my $s = $self->object;
     my @data;
+    my $length;
 
     my $seq_obj = $self->seq_obj;  # try the GFF first
 
     # Haven't fetched a GFF segment? Try Ace.
     # miserable broken workaround
     if (!$seq_obj || eval{ length($seq_obj->dna) } < 2 || eval { $s->Properties eq 'cDNA'}) {
+# why cDNA is special? that we can't get from cDNA?
+
         # try to use acedb
-        if (my $fasta = $s->asDNA) {
-            $fasta =~ s/^\s?>(.*)\n//;
-            $fasta =~ s/\s//g;
-            my $len = length($fasta);
-            if($len > 0){
-                push @data,{
-                    header=>"Sequence",
-                    sequence=>$fasta && "$fasta",
-                    length=>$len,
-                };
-            }
+        my $fasta = $s->asDNA || '';
+        $fasta =~ s/^\s?>(.*)\n//;
+        $fasta =~ s/\s//g;
+        $length = length($fasta);
+
+        if($length){
+            push @data,{
+                header=>"Sequence",
+                sequence=>$fasta && "$fasta",
+                length=>$length,
+            };
         } else {
             push @data, "Sequence unavailable.  If this is a cDNA, try searching for $s.5 or $s.3";
         }
-        goto END;
-    }
 
-    my $unspliced = lc $seq_obj->dna;
-    my $length = length($unspliced);
-
-    if (eval { $s->Coding_pseudogene } || eval {$s->Coding} || eval {$s->Corresponding_CDS}) {
-
-        # local coordinates
-        $seq_obj->ref($seq_obj);
-
-        my @features = $self->_get_ordered_features($seq_obj);
-
-        push @data, $self->_print_unspliced($seq_obj,$unspliced,@features);
-        push @data, $self->_print_spliced(@features);
-        push @data, $self->_print_protein(\@features) unless eval { $s->Coding_pseudogene };
     } else {
-        # Otherwise we've got genomic DNA here
-        push @data, {
-            header => "Genomic Sequence",
-            sequence => "$unspliced",
-            length => $length,
-        };
+
+        my $unspliced = lc $seq_obj->dna;
+        $length = length($unspliced);
+
+        if (eval { $s->Coding_pseudogene } || eval {$s->Coding} || eval {$s->Corresponding_CDS}) {
+
+            # local coordinates
+            $seq_obj->ref($seq_obj);   #Is this needed?
+
+            my @features = $self->_get_ordered_features($seq_obj);
+
+            push @data, $self->_print_unspliced($seq_obj,$unspliced,@features);
+            push @data, $self->_print_spliced(@features);
+            push @data, $self->_print_protein(\@features) unless eval { $s->Coding_pseudogene };
+
+        } else {
+            # Otherwise we've got genomic DNA here
+            push @data, {
+                header => "Genomic Sequence",
+                sequence => "$unspliced",
+                length => $length,
+            };
+        }
     }
+
     $self->length($length);
 
-    END:
     return { description => 'the sequence of the sequence',
              data        => @data ? \@data : undef };
 }
