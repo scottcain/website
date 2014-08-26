@@ -1027,11 +1027,25 @@ sub _build__seq_obj {
 
 sub _get_ordered_features {
     my ($self, $seq_obj) = @_;
-    # sort by stop if on -ve strand
-    my @features = grep { $_->primary_tag ne 'intron' && $_->primary_tag ne 'exon'}
-        map { $_->primary_tag eq 'CDS' ? ($_->get_SeqFeatures) : ($_) }
-            $seq_obj->get_SeqFeatures();
 
+    my @features;
+    foreach my $feature ($seq_obj->get_SeqFeatures()) {
+        if ($feature->primary_tag eq 'CDS'){
+            my @cds_segs = $feature->get_SeqFeatures();
+            if (@cds_segs){
+                push @features, @cds_segs
+            } else {
+                # a special case for some single CDS transcript
+                push @features, $feature;
+            }
+        }else{
+            push @features, $feature;
+        }
+    }
+
+    @features = grep { $_->primary_tag ne 'intron' && $_->primary_tag ne 'exon'} @features;
+
+    # sort by stop if on -ve strand
     @features = ($seq_obj->strand > 0) ? sort { $a->start <=> $b->start } @features : sort { $b->stop <=> $a->stop } @features;
 
     return @features;
@@ -1539,7 +1553,7 @@ sub _build__segments {
 
 sub _print_unspliced {
     my ($self, $seq_obj,$unspliced, @features) = @_;
-print Dumper $seq_obj;
+
     my $name = $seq_obj . ' (' . $seq_obj->start . '-' . $seq_obj->stop . ')';
     my $length_all   = length $unspliced;
     if ($length_all > 0) {
