@@ -367,6 +367,34 @@ around '_print_spliced' => sub {
 
 };
 
+
+# get coordinates of parent for exons etc
+# I don't see any difference between this and what's in Role::Sequence
+# Will remove when test case is written
+sub _get_parent_coords {
+    my ($self,$s) = @_;
+    my ($parent) = $self->sequence;
+    return unless $parent;
+    #  my $subseq = $parent->get('Subsequence');  # prevent automatic dereferencing
+
+    # Escape the sequence name for fetching
+    $s =~ s/\./\\./g;
+    # We may be dealing with transcripts, too.
+    my $se;
+    foreach my $tag (qw/CDS_child Transcript/) {
+        my $subseq = $parent->get($tag); # prevent automatic dereferencing
+        if ($subseq) {
+            $se = $subseq->at($s);
+            if ($se) {
+                my ($start,$stop) = $se->right->row;
+                my $orientation = $start <=> $stop;
+                return ($start,-$orientation,$parent);
+            }
+        }
+    }
+    return;
+}
+
 # sub _print_protein {
 # ...
 #     my $trimmed = join('',map {$_->dna} grep {$_->method eq 'coding_exon'} @$features);
