@@ -946,9 +946,8 @@ sub print_sequence {
     # Haven't fetched a GFF segment? Try Ace.
     # miserable broken workaround
     if (!$seq_obj || eval{ length($seq_obj->dna) } < 2 || eval { $s->Properties eq 'cDNA'}) {
-# why cDNA is special? that we can't get from cDNA?
+# why cDNA is special? that we can't get from GFF if available?
 
-        # try to use acedb
         my $fasta = $s->asDNA || '';
         $fasta =~ s/^\s?>(.*)\n//;
         $fasta =~ s/\s//g;
