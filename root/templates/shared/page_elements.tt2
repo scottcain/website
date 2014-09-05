@@ -1321,6 +1321,8 @@ END;
         NEXT IF widget.display == "index";
     END;
 
+    NEXT IF widget.hidden_widget;  #hidden from sidebar
+
     displayed_widgets.push(widget_name);
     w = {  id    = widget_name
             title = widget.title
