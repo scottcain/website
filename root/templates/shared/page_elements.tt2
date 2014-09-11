@@ -1046,6 +1046,21 @@ _ '</div>';
 END;
 %]
 
+[% MACRO copy_sequence(seq) BLOCK;
+    '<div class="copy-new">';
+        '<div class="copy-popup-content">';
+            '<textarea>';
+            seq;
+            '</textarea>';
+        '</div>';
+        '<a  class="button ui-corner-all copy-to-clipboard" data-class="protein">'
+            _ '<span class="ui-icon ui-icon-copy ui-corner-all ui-button"></span>'
+            _ '<span>copy to clipboard</span>'
+        _ '</a>';
+    '</div>';
+END;
+%]
+
 [% MACRO format_sequence(seq, header, offset, length) BLOCK;
     format_seq = header ? ">$header\n" : "";
     IF length;
@@ -1105,6 +1120,7 @@ END;
         title_html = title | remove('(\<(/?[^\>]+)\>)');
         fname = object.name.data.id _ title_html _ '.fasta';
         sequences.$obj.download = generate_file_download(fname, seq_html, "sequence-download");
+        sequences.$obj.copyToClipboard = copy_sequence('ABC');
 
         sequences.$obj.seq = format_seq | replace('\n', '<br />');
         sequences.$obj.title = 'view ' _ title;
@@ -1118,6 +1134,7 @@ END;
         FOREACH obj IN sequences.keys;
           '<div class="seq-toggle">';
           sequences.$obj.download;
+          sequences.$obj.copyToClipboard;
           IF sequences.$obj.seq;
             op = open_toggle.defined ? open_toggle : (sequences.$obj.seq.length > 2000) ? 0 : 1;
             WRAPPER toggle title=sequences.$obj.title toggle_class="sequence-container" open=op;

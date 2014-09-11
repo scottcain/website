@@ -497,6 +497,36 @@
         });
       });
 
+      content.delegate(".copy-to-clipboard", 'mouseover', function(){
+          var clink =  $jq(this);
+          var popContent = clink.closest(".copy-new").find('.copy-popup-content');
+
+          Plugin.getPlugin("colorbox", function(){
+            clink.colorbox({href: popContent,
+                            inline: true,
+                            width: "800px",
+                            height: "550px",
+                            scrolling: false,
+                            onComplete: function() {
+                                $jq.colorbox.resize();
+                                var seq = $jq('#colorbox').find('textarea');
+seq.val('fdfdfdf');
+                                seq.focus(function() {
+                                    var $this = $jq(this);
+                                    $this.select();
+
+                                    // Work around Chrome's little problem
+                                    $this.mouseup(function() {
+                                        // Prevent further mouseup intervention
+                                        $this.unbind("mouseup");
+                                        return false;
+                                    });
+                                });
+                                seq.focus();
+                            },
+                            title: function(){ ''; }});
+          });
+      });
     }
 
     function moduleMin(button, hover, direction, callback) {
