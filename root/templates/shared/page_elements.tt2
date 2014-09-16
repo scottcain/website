@@ -1048,15 +1048,15 @@ END;
 
 [% MACRO copy_sequence(seq) BLOCK;
     '<div class="copy-new">';
-        '<div class="copy-popup-content">';
-            '<textarea>';
-            seq;
-            '</textarea>';
-        '</div>';
         '<a  class="button ui-corner-all copy-to-clipboard" data-class="protein">'
             _ '<span class="ui-icon ui-icon-copy ui-corner-all ui-button"></span>'
             _ '<span>copy to clipboard</span>'
         _ '</a>';
+        '<div class="copy-popup-content">';
+            '<textarea class="sequence-container" style="display:none;">';
+            seq;
+            '</textarea>';
+        '</div>';
     '</div>';
 END;
 %]
@@ -1120,7 +1120,7 @@ END;
         title_html = title | remove('(\<(/?[^\>]+)\>)');
         fname = object.name.data.id _ title_html _ '.fasta';
         sequences.$obj.download = generate_file_download(fname, seq_html, "sequence-download");
-        sequences.$obj.copyToClipboard = copy_sequence('ABC');
+        sequences.$obj.copyToClipboard = copy_sequence(seq_html);
 
         sequences.$obj.seq = format_seq | replace('\n', '<br />');
         sequences.$obj.title = 'view ' _ title;

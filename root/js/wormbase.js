@@ -497,36 +497,21 @@
         });
       });
 
-      content.delegate(".copy-to-clipboard", 'mouseover', function(){
-          var clink =  $jq(this);
-          var popContent = clink.closest(".copy-new").find('.copy-popup-content');
+      $jq("body").delegate(".copy-to-clipboard", 'click', function(){
+          var copyButton =  $jq(this);
+          var seqArea = copyButton.closest(".seq-toggle").find('.copy-popup-content').find('textarea');
+          seqArea.show();
+          copyButton.hide();
+          seqArea.select();
 
-          Plugin.getPlugin("colorbox", function(){
-            clink.colorbox({href: popContent,
-                            inline: true,
-                            width: "800px",
-                            height: "550px",
-                            scrolling: false,
-                            onComplete: function() {
-                                $jq.colorbox.resize();
-                                var seq = $jq('#colorbox').find('textarea');
-seq.val('fdfdfdf');
-                                seq.focus(function() {
-                                    var $this = $jq(this);
-                                    $this.select();
-
-                                    // Work around Chrome's little problem
-                                    $this.mouseup(function() {
-                                        // Prevent further mouseup intervention
-                                        $this.unbind("mouseup");
-                                        return false;
-                                    });
-                                });
-                                seq.focus();
-                            },
-                            title: function(){ ''; }});
+          seqArea.blur(function() {
+              var $this = $jq(this);
+              $this.hide();
+              copyButton.show();
           });
+
       });
+
     }
 
     function moduleMin(button, hover, direction, callback) {
