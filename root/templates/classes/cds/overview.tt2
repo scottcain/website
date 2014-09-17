@@ -28,7 +28,7 @@ END;
     markup(fields.description.data);
 '</div>';
 
-'<div class="description">';
+'<div class="description" style="clear:right;">';
     sequence('print_sequence');
 '</div>';
 
