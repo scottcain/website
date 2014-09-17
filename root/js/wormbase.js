@@ -498,19 +498,49 @@
       });
 
       $jq("body").delegate(".copy-to-clipboard", 'click', function(){
-          var copyButton =  $jq(this);
-          var seqArea = copyButton.closest(".seq-toggle").find('.copy-popup-content').find('textarea');
-          seqArea.show();
-          copyButton.hide();
-          seqArea.select();
+          var copyButton =  $jq(this),
+              seqTog = copyButton.closest(".seq-toggle"),
+              tog = seqTog.find('.toggle'),
+              seqCopyContainer = seqTog.find('.copy-content'),
+              seqCopy = seqCopyContainer.find('textarea'),
+              seqNormal = seqTog.find('.sequence-formatted');
 
-          seqArea.blur(function() {
-              var $this = $jq(this);
-              $this.hide();
-              copyButton.show();
+          // sequence for copying and sequence for displaying are shown at alternating time.
+          // toggle controls if either sequence is shown at all
+          seqCopyContainer.show();
+          seqNormal.hide();
+          copyButton.hide();  //hide to avoid confusing the user
+          if (!tog.hasClass('active')){
+              tog.click();
+          }
+          seqCopy.select();  //pre select sequence for copying
+
+
+          var isToggleEvent;
+          seqTog.find('.toggle').mousedown(function(e){
+              isToggleEvent =  true;
           });
 
-      });
+          seqCopy.blur(function(e) {
+              // revert to show the sequence for display
+              seqCopyContainer.hide();
+              if (isToggleEvent){
+                  // Hack! Avoid sequence for display flashing while the toggle is closing,
+                  // and avoid oddity due to clicking copy button too quickly
+                  seqNormal.show(300, function(){
+                      copyButton.show();
+                  });
+              }else{
+                  seqNormal.show();
+                  copyButton.show();
+              }
+          });
+
+          seqCopy.dblclick(function(){
+              seqCopy.select();
+          });
+
+       });
 
     }
 
