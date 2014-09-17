@@ -2165,15 +2165,17 @@ div#google-map {
 
 /* SEQUENCE STYLING */
 /* sequence display formatting */
-.sequence-container {
-    font-family: Courier, monospace;
-    font-size: 13px; /*0.8em; */
-    overflow: hidden;
+sequence-toggle-content {
     clear: both;
-    margin: 5px;
-    width:55em;
+    overflow: hidden;
+    margin:5px;
+    width: 55em;
 }
 
+.sequence-container {
+    font-family: Courier, monospace;
+    font-size: 0.8em;
+}
 
 .sequence-download {
   position:absolute;
@@ -2190,8 +2192,9 @@ div#google-map {
     overflow: auto;
     overflow-y: scroll;
     font-family: Courier, monospace;
-    font-size: 13px; /*0.8em; */
-    width: 95%;
+    font-size: 0.8em;
+    height:20.5em;
+    width: 50em;
 }
 
 .sequence-section {

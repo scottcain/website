@@ -1117,7 +1117,8 @@ END;
         sequences.$obj.download = generate_file_download(fname, seq_html, "sequence-download");
         sequences.$obj.copyToClipboard = copy_sequence(seq_html);
         sequences.$obj.copyContent = '<div class="copy-content"  style="display:none;">'
-            _ 'Copy the sequence with Ctrl/Command + C keyboard shortcut'
+            _ '<p id="fade">Use <b>Ctrl/Command + C</b> keyboard shortcut to copy the sequence.</br>'
+            _ 'Click outside the copy region to display the sequence.</p>'
             _ '<textarea class="sequence-area">'
             _ seq_html
             _ '</textarea>'
@@ -1139,9 +1140,9 @@ END;
           IF sequences.$obj.seq;
 
             op = open_toggle.defined ? open_toggle : (sequences.$obj.seq.length > 2000) ? 0 : 1;
-            WRAPPER toggle title=sequences.$obj.title toggle_class="sequence-container" open=op;
+            WRAPPER toggle title=sequences.$obj.title toggle_class="sequence-toggle-content" open=op;
               sequences.$obj.copyContent;
-              '<div class="sequence-formatted">' _ sequences.$obj.seq _ '</div>';
+              '<div class="sequence-container">' _ sequences.$obj.seq _ '</div>';
             END;
             IF (sequences.$obj.title.match('UTR') && sequences.$obj.seq.match('color'));
               '<p id="fade" style="width:55em">Lowercase text in transcripts indicates introns and UTRs, UTR sequences having a light gray font. Uppercase, highlighted text in transcripts indicate coding sequence where each subsequent coding exon is highlighted in a different color, alternating between yellow and orange, to differentiate one exon from the next</p>';

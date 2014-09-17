@@ -503,7 +503,7 @@
               tog = seqTog.find('.toggle'),
               seqCopyContainer = seqTog.find('.copy-content'),
               seqCopy = seqCopyContainer.find('textarea'),
-              seqNormal = seqTog.find('.sequence-formatted');
+              seqNormal = seqTog.find('.sequence-container');
 
           // sequence for copying and sequence for displaying are shown at alternating time.
           // toggle controls if either sequence is shown at all
