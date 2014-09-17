@@ -2165,8 +2165,8 @@ div#google-map {
 
 /* SEQUENCE STYLING */
 /* sequence display formatting */
-sequence-toggle-content {
-    clear: both;
+.sequence-toggle-content {
+    clear: left;
     overflow: hidden;
     margin:5px;
     width: 55em;
@@ -2189,7 +2189,6 @@ sequence-toggle-content {
 }
 
 .sequence-area {
-    overflow: auto;
     overflow-y: scroll;
     font-family: Courier, monospace;
     font-size: 0.8em;

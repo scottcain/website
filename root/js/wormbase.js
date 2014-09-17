@@ -520,6 +520,9 @@
           seqTog.find('.toggle').mousedown(function(e){
               isToggleEvent =  true;
           });
+          seqTog.find('.toggle').mouseup(function(e){
+              isToggleEvent =  null; //reset
+          });
 
           seqCopy.blur(function(e) {
               // revert to show the sequence for display
@@ -527,11 +530,11 @@
               if (isToggleEvent){
                   // Hack! Avoid sequence for display flashing while the toggle is closing,
                   // and avoid oddity due to clicking copy button too quickly
-                  seqNormal.show(300, function(){
+                  seqNormal.show(400, function(){
                       copyButton.show();
                   });
               }else{
-                  seqNormal.show();
+                  seqNormal.fadeIn('fast');
                   copyButton.show();
               }
           });
