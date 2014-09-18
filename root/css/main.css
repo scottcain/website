@@ -2175,6 +2175,7 @@ div#google-map {
     max-height:20em;
     font-family: Courier, monospace;
     font-size: 0.8em;
+    width: 55em;
 }
 
 .sequence-container::-webkit-scrollbar {
@@ -2210,7 +2211,6 @@ div#google-map {
     font-family: Courier, monospace;
     font-size: 0.8em;
     height:20em;
-    width: 55em;
 }
 
 .sequence-section {
