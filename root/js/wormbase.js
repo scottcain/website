@@ -526,11 +526,12 @@
               isToggleEvent =  null; //reset
           });
 
+
           var ready = false;  // hack!! to handle misfired blur event
           seqCopy.blur(function(e) {
               // revert to show the sequence for display
               if (!ready){
-                  seqCopy.focus();
+                  seqCopy.select();
               }else{
                   seqCopyContainer.hide();
                   if (isToggleEvent){
