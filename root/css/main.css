@@ -2167,14 +2167,31 @@ div#google-map {
 /* sequence display formatting */
 .sequence-toggle-content {
     clear: left;
-    overflow: hidden;
     margin:5px;
-    width: 55em;
 }
 
 .sequence-container {
+    overflow-y:scroll;
+    max-height:20em;
     font-family: Courier, monospace;
     font-size: 0.8em;
+}
+
+.sequence-container::-webkit-scrollbar {
+    -webkit-appearance: none;
+}
+
+.sequence-container::-webkit-scrollbar:vertical {
+    width: 9px;
+}
+.sequence-container::-webkit-scrollbar-thumb {
+    border-radius: 8px;
+    border: 2px solid #d3d3d; /* should match background, can't be transparent */
+    background-color: rgba(0, 0, 0, .5);
+}
+.sequence-container::-webkit-scrollbar-track {
+    background-color: #d3d3d3;
+    border-radius: 8px;
 }
 
 .sequence-download {
@@ -2192,8 +2209,8 @@ div#google-map {
     overflow-y: scroll;
     font-family: Courier, monospace;
     font-size: 0.8em;
-    height:20.5em;
-    width: 50em;
+    height:20em;
+    width: 55em;
 }
 
 .sequence-section {
