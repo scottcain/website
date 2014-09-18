@@ -497,7 +497,9 @@
         });
       });
 
-      $jq("body").delegate(".copy-to-clipboard", 'click', function(){
+      $jq("body").delegate(".copy-to-clipboard", 'mousedown', function(){
+          // mousedown instead of click due to mouse movement caused by showing or hiding elements
+
           var copyButton =  $jq(this),
               seqTog = copyButton.closest(".seq-toggle"),
               tog = seqTog.find('.toggle'),
@@ -513,7 +515,7 @@
           if (!tog.hasClass('active')){
               tog.click();
           }
-          seqCopy.select();  //pre select sequence for copying
+          seqCopy.select();  //pre-select sequence for copying
 
 
           var isToggleEvent;
@@ -524,19 +526,25 @@
               isToggleEvent =  null; //reset
           });
 
+          var ready = false;  // hack!! to handle misfired blur event
           seqCopy.blur(function(e) {
               // revert to show the sequence for display
-              seqCopyContainer.hide();
-              if (isToggleEvent){
-                  // Hack! Avoid sequence for display flashing while the toggle is closing,
-                  // and avoid oddity due to clicking copy button too quickly
-                  seqNormal.show(400, function(){
-                      copyButton.show();
-                  });
+              if (!ready){
+                  seqCopy.focus();
               }else{
-                  seqNormal.fadeIn('fast');
-                  copyButton.show();
+                  seqCopyContainer.hide();
+                  if (isToggleEvent){
+                      // Hack! Avoid sequence for display flashing while the toggle is closing,
+                      // and avoid oddity due to clicking copy button too quickly
+                      seqNormal.show(400, function(){
+                          copyButton.show();
+                      });
+                  }else{
+                      seqNormal.fadeIn('fast');
+                      copyButton.show();
+                  }
               }
+              ready = !ready;
           });
 
           seqCopy.dblclick(function(){
@@ -546,6 +554,7 @@
        });
 
     }
+
 
     function moduleMin(button, hover, direction, callback) {
       var module = $jq("#" + button.attr("wname") + "-content");
